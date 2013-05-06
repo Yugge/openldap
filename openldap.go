@@ -49,9 +49,9 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"unsafe"
-	"strings"
 	"strconv"
+	"strings"
+	"unsafe"
 )
 
 /* Intialize() open an LDAP connexion ; supported url formats :
@@ -78,6 +78,11 @@ func Initialize(url string) (*Ldap, error) {
 	}
 
 	return &Ldap{ldap}, nil
+}
+
+/* CreateFromC creates a new *Ldap from a *C.Ldap*/
+func CreateFromC(l *C.Ldap) *Ldap {
+	return &Ldap{l}
 }
 
 /* 
@@ -140,6 +145,7 @@ func (self *Ldap) Close() error {
 	return errors.New(fmt.Sprintf("LDAP::Close() error (%d) : %s", int(rv), ErrorToString(int(rv))))
 
 }
+
 /* 
  * Unbind() close LDAP connexion
  * 
@@ -197,7 +203,7 @@ func (self *Ldap) Search(base string, scope int, filter string, attributes []str
 // ------------------------------------- Ldap* method (object oriented) -------------------------------------------------------------------
 
 // Create a new LdapAttribute entry with name and values.
-func LdapAttributeNew(name string, values []string)(*LdapAttribute){
+func LdapAttributeNew(name string, values []string) *LdapAttribute {
 	a := new(LdapAttribute)
 	a.values = values
 	a.name = name
@@ -205,25 +211,25 @@ func LdapAttributeNew(name string, values []string)(*LdapAttribute){
 }
 
 // Append() adds an LdapAttribute to self LdapEntry
-func (self *LdapEntry) Append(a LdapAttribute){
+func (self *LdapEntry) Append(a LdapAttribute) {
 	self.values = append(self.values, a)
 }
 
 // String() is used for fmt.Println(self)
 //
-func (self *LdapAttribute) String() string{
+func (self *LdapAttribute) String() string {
 	return self.ToText()
 }
 
 // ToText() returns a text string representation of LdapAttribute
 // avoiding displaying binary data.
 //
-func (self *LdapAttribute) ToText() string{
-	
+func (self *LdapAttribute) ToText() string {
+
 	var list []string
-	
+
 	for _, a := range self.Values() {
-		if (!_isPrint(a)) {
+		if !_isPrint(a) {
 			list = append(list, fmt.Sprintf("binary-data[%d]", len(a)))
 		} else {
 			list = append(list, a)
@@ -236,34 +242,34 @@ func (self *LdapAttribute) ToText() string{
 }
 
 // Name() return attribute name
-func (self *LdapAttribute) Name() string{
+func (self *LdapAttribute) Name() string {
 	return self.name
 }
 
 // Values() returns array values for self LdapAttribute 
 //
-func (self *LdapAttribute) Values() []string{
+func (self *LdapAttribute) Values() []string {
 	return self.values
 }
 
 // _isPrint() returns true if str is printable
 //
 // @private method
-func _isPrint(str string) bool{
-	for _, c := range str{
-		
+func _isPrint(str string) bool {
+	for _, c := range str {
+
 		if !strconv.IsPrint(rune(c)) {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
 // IsPrint() returns true is self LdapAttribute is printable.
-func (self *LdapAttribute) IsPrint() bool{
+func (self *LdapAttribute) IsPrint() bool {
 	for _, a := range self.Values() {
-		if (!_isPrint(a)) {
+		if !_isPrint(a) {
 			return false
 		}
 	}
@@ -271,12 +277,12 @@ func (self *LdapAttribute) IsPrint() bool{
 }
 
 // Dn() returns DN (Distinguish Name) for self LdapEntry
-func (self *LdapEntry) Dn() string{
+func (self *LdapEntry) Dn() string {
 	return self.dn
 }
 
 // Attributes() returns an array of LdapAttribute
-func (self *LdapEntry) Attributes() []LdapAttribute{
+func (self *LdapEntry) Attributes() []LdapAttribute {
 	return self.values
 }
 
@@ -286,34 +292,35 @@ func (self *LdapEntry) String() string {
 }
 
 // GetValuesByName() get a list of values for self LdapEntry, using "name" attribute
-func (self *LdapEntry) GetValuesByName(attrib string) []string{
-	
-	for _, a := range self.values{
+func (self *LdapEntry) GetValuesByName(attrib string) []string {
+
+	for _, a := range self.values {
 		if a.Name() == attrib {
 			return a.values
 		}
 	}
-	
+
 	return []string{}
 }
+
 // GetOneValueByName() ; a quick way to get a single attribute value
-func (self *LdapEntry) GetOneValueByName(attrib string) (string, error){
-	
-	for _, a := range self.values{
+func (self *LdapEntry) GetOneValueByName(attrib string) (string, error) {
+
+	for _, a := range self.values {
 		if a.Name() == attrib {
 			return a.values[0], nil
 		}
 	}
-	
+
 	return "", errors.New(fmt.Sprintf("LdapEntry::GetOneValueByName() error : attribute %s not found", attrib))
 }
 
 // ToText() return a string representating self LdapEntry
-func (self *LdapEntry) ToText() string{
+func (self *LdapEntry) ToText() string {
 
 	txt := fmt.Sprintf("dn: %s\n", self.dn)
-	
-	for _, a := range self.values{
+
+	for _, a := range self.values {
 		txt = txt + fmt.Sprintf("%s\n", a.ToText())
 	}
 
@@ -321,12 +328,12 @@ func (self *LdapEntry) ToText() string{
 }
 
 // Append() add e to LdapSearchResult array
-func (self *LdapSearchResult) Append(e LdapEntry){
+func (self *LdapSearchResult) Append(e LdapEntry) {
 	self.entries = append(self.entries, e)
 }
 
 // ToText() : a quick way to print an LdapSearchResult
-func (self *LdapSearchResult) ToText() string{
+func (self *LdapSearchResult) ToText() string {
 
 	txt := fmt.Sprintf("# query : %s\n", self.filter)
 	txt = txt + fmt.Sprintf("# num results : %d\n", self.Count())
@@ -334,7 +341,7 @@ func (self *LdapSearchResult) ToText() string{
 	txt = txt + fmt.Sprintf("# base : %s\n", self.Base())
 	txt = txt + fmt.Sprintf("# attributes : [%s]\n", strings.Join(self.Attributes(), ", "))
 
-	for _, e := range self.entries{
+	for _, e := range self.entries {
 		txt = txt + fmt.Sprintf("%s\n", e.ToText())
 	}
 
@@ -342,37 +349,37 @@ func (self *LdapSearchResult) ToText() string{
 }
 
 // String() : used for fmt.Println(self)
-func (self *LdapSearchResult) String() string{
+func (self *LdapSearchResult) String() string {
 	return self.ToText()
 }
 
 // Entries() : returns an array of LdapEntry for self
-func (self *LdapSearchResult) Entries() []LdapEntry{
+func (self *LdapSearchResult) Entries() []LdapEntry {
 	return self.entries
 }
 
 // Count() : returns number of results for self search.
-func (self *LdapSearchResult) Count() int{
+func (self *LdapSearchResult) Count() int {
 	return len(self.entries)
 }
 
 // Filter() : returns filter for self search
-func (self *LdapSearchResult) Filter() string{
+func (self *LdapSearchResult) Filter() string {
 	return self.filter
 }
 
 // Filter() : returns base DN for self search
-func (self *LdapSearchResult) Base() string{
+func (self *LdapSearchResult) Base() string {
 	return self.base
 }
 
 // Filter() : returns scope for self search
-func (self *LdapSearchResult) Scope() int{
+func (self *LdapSearchResult) Scope() int {
 	return self.scope
 }
 
 // Filter() : returns an array of attributes used for this actual search
-func (self *LdapSearchResult) Attributes() []string{
+func (self *LdapSearchResult) Attributes() []string {
 	return self.attributes
 }
 
@@ -383,9 +390,9 @@ func (self *Ldap) SearchAll(base string, scope int, filter string, attributes []
 
 	sr := new(LdapSearchResult)
 
-	sr.ldap   = self
-	sr.base   = base
-	sr.scope  = scope
+	sr.ldap = self
+	sr.base = base
+	sr.scope = scope
 	sr.filter = filter
 	sr.attributes = attributes
 
@@ -404,7 +411,7 @@ func (self *Ldap) SearchAll(base string, scope int, filter string, attributes []
 
 	for e != nil {
 		_e := new(LdapEntry)
-		
+
 		_e.dn = e.GetDn()
 
 		attr, _ := e.FirstAttribute()
@@ -421,6 +428,6 @@ func (self *Ldap) SearchAll(base string, scope int, filter string, attributes []
 
 		e = e.NextEntry()
 	}
-	
+
 	return sr, nil
 }
