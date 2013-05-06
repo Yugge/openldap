@@ -81,7 +81,7 @@ func Initialize(url string) (*Ldap, error) {
 }
 
 /* CreateFromC creates a new *Ldap from a *C.Ldap*/
-func CreateFromC(l *C.Ldap) *Ldap {
+func CreateFromC(l *C.LDAP) *Ldap {
 	return &Ldap{l}
 }
 
